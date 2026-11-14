@@ -1,0 +1,165 @@
+{
+  "@@locale": "en",
+  "appTitle": "Balance Player",
+  "tabSongs": "Songs",
+  "tabAlbums": "Albums",
+  "tabArtists": "Artists",
+  "tabFolders": "Folders",
+  "search": "Search",
+  "searchHint": "Search songs, albums, artists",
+  "noResults": "No results",
+  "settings": "Settings",
+  "sort": "Sort",
+  "sortTitle": "Title",
+  "sortArtist": "Artist",
+  "sortAlbum": "Album",
+  "sortDateAdded": "Date added",
+  "sortDuration": "Duration",
+  "sortAscending": "Ascending",
+  "sortDescending": "Descending",
+  "songCount": "{count, plural, =1{1 song} other{{count} songs}}",
+  "@songCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "playAll": "Play all",
+  "playNext": "Play next",
+  "addToQueue": "Add to queue",
+  "willPlayNext": "Will play next",
+  "addedToQueue": "Added to queue",
+  "unknownArtist": "Unknown artist",
+  "unknownAlbum": "Unknown album",
+  "nowPlaying": "Now playing",
+  "queue": "Queue",
+  "emptyQueue": "The queue is empty",
+  "removeFromQueue": "Remove from queue",
+  "repeatOff": "Repeat off",
+  "repeatAll": "Repeat all",
+  "repeatOne": "Repeat one",
+  "libraryEmpty": "No music found",
+  "rescan": "Rescan library",
+  "scanning": "Scanning…",
+  "scanFailed": "Scan failed: {error}",
+  "@scanFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "permissionTitle": "Permission needed",
+  "permissionBody": "To find the music on your phone, the app needs permission to read audio files.",
+  "grantPermission": "Allow access",
+  "openSettings": "Open settings",
+  "settingsAppearance": "Appearance",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "settingsLibrary": "Library",
+  "minDuration": "Skip short audio files",
+  "minDurationOff": "Don't skip",
+  "minDurationValue": "Shorter than {seconds} s",
+  "@minDurationValue": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "excludedFolders": "Excluded folders",
+  "excludedFoldersSummary": "{count, plural, =0{None} =1{1 folder excluded} other{{count} folders excluded}}",
+  "@excludedFoldersSummary": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "settingsPlayback": "Playback",
+  "duckLevel": "Music volume while navigation speaks",
+  "percent": "{value}%",
+  "@percent": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "pauseOnDuck": "Pause instead of lowering volume",
+  "pauseOnDuckSubtitle": "When navigation or another app speaks",
+  "tabPlaylists": "Playlists",
+  "favorites": "Favorites",
+  "favoritesEmpty": "No favorites yet",
+  "addToFavorites": "Add to favorites",
+  "removeFromFavorites": "Remove from favorites",
+  "addToPlaylist": "Add to playlist",
+  "addAllToPlaylist": "Add all to playlist",
+  "addedToPlaylist": "Added to \"{name}\"",
+  "@addedToPlaylist": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "newPlaylist": "New playlist",
+  "playlistName": "Playlist name",
+  "playlistEmpty": "This playlist has no songs yet",
+  "removeFromPlaylist": "Remove from playlist",
+  "saveQueueAsPlaylist": "Save queue as playlist",
+  "deletePlaylist": "Delete playlist",
+  "deletePlaylistConfirm": "Delete \"{name}\"? The music files themselves won't be deleted.",
+  "@deletePlaylistConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "create": "Create",
+  "rename": "Rename",
+  "save": "Save",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "shuffle": "Shuffle",
+  "shuffleOn": "Shuffle on",
+  "shuffleOff": "Shuffle off",
+  "settingsNormalization": "Volume balance",
+  "normalize": "Balance song volume",
+  "normalizeSubtitle": "Automatically adjusts each song so they all sound equally loud",
+  "targetLoudness": "Target loudness",
+  "targetLoudnessHint": "Higher is louder overall, but more songs need boosting",
+  "lufsValue": "{value} LUFS",
+  "@lufsValue": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "lufsRecommended": "{value} LUFS (recommended)",
+  "@lufsRecommended": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "analysisProgress": "Loudness analysis",
+  "analysisProgressValue": "{done} / {total} songs analyzed",
+  "@analysisProgressValue": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "analysisRunning": "analyzing…",
+  "reanalyzeAll": "Re-analyze all songs",
+  "normalizationGain": "Volume balance {gain}",
+  "@normalizationGain": {
+    "placeholders": {
+      "gain": { "type": "String" }
+    }
+  },
+  "normalizationAnalyzing": "Volume balance: analyzing…",
+  "normalizationFailed": "Volume balance: can't analyze this song",
+  "off": "Off",
+  "equalizer": "Equalizer",
+  "eqEnable": "Use equalizer",
+  "eqHint": "Applied after volume balance. A limiter prevents distortion when bands are boosted.",
+  "eqFlat": "Flat",
+  "eqBassBoost": "Bass boost",
+  "eqTrebleBoost": "Treble boost",
+  "eqVocal": "Vocal",
+  "eqRock": "Rock",
+  "eqPop": "Pop",
+  "eqClassical": "Classical",
+  "eqCustom": "Custom",
+  "drivingMode": "Driving mode",
+  "drivingModeSubtitle": "Narrows the gap between quiet and loud parts so quiet passages aren't drowned out by road noise"
+}

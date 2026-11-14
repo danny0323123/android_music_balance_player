@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_label">Now playing</string>
+    <string name="widget_description">Song, album art and playback buttons</string>
+    <string name="widget_empty_title">Balance Player</string>
+    <string name="widget_empty_subtitle">Tap to open</string>
+    <string name="widget_previous">Previous</string>
+    <string name="widget_play">Play</string>
+    <string name="widget_pause">Pause</string>
+    <string name="widget_next">Next</string>
+</resources>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="190" viewBox="0 0 900 190" font-family="'Microsoft JhengHei','Noto Sans TC',sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0L10 5L0 10z" fill="#868e96"/>
+    </marker>
+  </defs>
+  <rect width="900" height="190" rx="12" fill="#ffffff"/>
+  <text x="450" y="32" font-size="18" font-weight="bold" fill="#222" text-anchor="middle">聲音經過的處理順序</text>
+  <g stroke="#868e96" stroke-width="2" marker-end="url(#a)">
+    <line x1="122" y1="95" x2="142" y2="95"/>
+    <line x1="270" y1="95" x2="290" y2="95"/>
+    <line x1="418" y1="95" x2="438" y2="95"/>
+    <line x1="566" y1="95" x2="586" y2="95"/>
+    <line x1="714" y1="95" x2="734" y2="95"/>
+  </g>
+  <g font-size="15" font-weight="bold" text-anchor="middle">
+    <rect x="16" y="65" width="104" height="60" rx="10" fill="#f1f3f5" stroke="#adb5bd"/>
+    <text x="68" y="100" fill="#222">音樂檔</text>
+
+    <rect x="144" y="65" width="124" height="60" rx="10" fill="#fff4e6" stroke="#e8590c" stroke-width="2"/>
+    <text x="206" y="92" fill="#d9480f">音量均衡</text>
+    <text x="206" y="112" font-size="12" font-weight="normal" fill="#555">每首自動 ± dB</text>
+
+    <rect x="292" y="65" width="124" height="60" rx="10" fill="#edf2ff" stroke="#4c6ef5"/>
+    <text x="354" y="92" fill="#364fc7">等化器</text>
+    <text x="354" y="112" font-size="12" font-weight="normal" fill="#555">10 段，可關</text>
+
+    <rect x="440" y="65" width="124" height="60" rx="10" fill="#edf2ff" stroke="#4c6ef5"/>
+    <text x="502" y="92" fill="#364fc7">開車模式</text>
+    <text x="502" y="112" font-size="12" font-weight="normal" fill="#555">壓縮動態，預設關</text>
+
+    <rect x="588" y="65" width="124" height="60" rx="10" fill="#ebfbee" stroke="#37b24d"/>
+    <text x="650" y="92" fill="#2b8a3e">限幅器</text>
+    <text x="650" y="112" font-size="12" font-weight="normal" fill="#555">防止破音</text>
+
+    <rect x="736" y="65" width="148" height="60" rx="10" fill="#f1f3f5" stroke="#adb5bd"/>
+    <text x="810" y="92" fill="#222">手機音量鍵</text>
+    <text x="810" y="112" font-size="12" font-weight="normal" fill="#555">→ 耳機 / 喇叭 / 車機</text>
+  </g>
+  <text x="450" y="160" font-size="13" fill="#777" text-anchor="middle">導航說話時，音樂會自動降到設定的音量（或改成暫停），說完再恢復</text>
+</svg>

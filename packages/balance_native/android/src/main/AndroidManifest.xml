@@ -1,0 +1,22 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- 桌面小工具 -->
+        <receiver
+            android:name=".PlayerWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/player_widget_info" />
+        </receiver>
+
+        <!-- 給 Android Auto 讀專輯封面（只能讀封面，不能讀其他檔案） -->
+        <provider
+            android:name=".ArtProvider"
+            android:authorities="${applicationId}.art"
+            android:exported="true" />
+    </application>
+</manifest>

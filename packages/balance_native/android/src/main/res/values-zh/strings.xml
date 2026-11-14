@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_label">正在播放</string>
+    <string name="widget_description">歌名、專輯封面和播放按鈕</string>
+    <string name="widget_empty_title">均衡播放器</string>
+    <string name="widget_empty_subtitle">點一下開啟</string>
+    <string name="widget_previous">上一首</string>
+    <string name="widget_play">播放</string>
+    <string name="widget_pause">暫停</string>
+    <string name="widget_next">下一首</string>
+</resources>

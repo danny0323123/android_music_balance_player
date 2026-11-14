@@ -1,0 +1,22 @@
+name: balance_native
+description: "Android side of the music player: MediaStore, loudness analysis, audio effects, home widget, artwork for Android Auto."
+version: 0.0.1
+publish_to: 'none'
+
+environment:
+  sdk: ^3.13.7
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+# 做成 plugin 是為了讓 Flutter 在每個引擎建立時自動註冊這些 channel。
+# Android Auto 或桌面小工具在 app 沒開的時候啟動播放服務，引擎由 audio_service 建立、
+# 不會經過 MainActivity，原本寫在 MainActivity 裡的 channel 就不存在。
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.musicbalance.balance_native
+        pluginClass: BalanceNativePlugin
