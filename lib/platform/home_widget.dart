@@ -17,6 +17,7 @@ abstract final class HomeWidget {
         'playing': playing,
         'albumId': song?.albumId,
         'songId': song?.id,
+        'modified': song?.dateModified,
       });
     } on MissingPluginException {
       // 測試環境沒有原生端

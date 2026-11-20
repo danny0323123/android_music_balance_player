@@ -55,11 +55,7 @@ class NowPlayingPage extends ConsumerWidget {
                       constraints: const BoxConstraints(maxWidth: 400),
                       child: AspectRatio(
                         aspectRatio: 1,
-                        child: Artwork(
-                          albumId: song.albumId,
-                          songId: song.id,
-                          radius: 16,
-                        ),
+                        child: Artwork(song: song, radius: 16),
                       ),
                     ),
                     const SizedBox(height: 32),

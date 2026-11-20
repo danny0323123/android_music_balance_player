@@ -24,8 +24,14 @@ class _PermissionGateState extends ConsumerState<PermissionGate> {
   @override
   void initState() {
     super.initState();
-    // 從系統設定頁回來時重新檢查
-    _lifecycle = AppLifecycleListener(onResume: _check);
+    _lifecycle = AppLifecycleListener(
+      // 從系統設定頁回來時重新檢查
+      onResume: _check,
+      // 從別的 app 切回來時重掃，在檔案管理員刪除或新增的歌才會反映出來
+      onShow: () {
+        if (_status?.isGranted ?? false) scanLibrary(context, ref);
+      },
+    );
     _check();
   }
 

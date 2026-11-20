@@ -366,4 +366,161 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get drivingModeSubtitle =>
       'Narrows the gap between quiet and loud parts so quiet passages aren\'t drowned out by road noise';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get selectAll => 'Select all';
+
+  @override
+  String get clearSelection => 'Clear selection';
+
+  @override
+  String get selectionHint => 'Long-press another song to select a range';
+
+  @override
+  String get editInfo => 'Edit info';
+
+  @override
+  String get editAlbum => 'Edit album';
+
+  @override
+  String get fieldTitle => 'Title';
+
+  @override
+  String get fieldArtist => 'Artist';
+
+  @override
+  String get fieldAlbum => 'Album';
+
+  @override
+  String get fieldAlbumArtist => 'Album artist';
+
+  @override
+  String get fieldGenre => 'Genre';
+
+  @override
+  String get fieldYear => 'Year';
+
+  @override
+  String get changeCover => 'Change cover';
+
+  @override
+  String get tags => 'Tags';
+
+  @override
+  String get tagsEmpty => 'No tags yet';
+
+  @override
+  String get newTag => 'New tag';
+
+  @override
+  String get tagName => 'Tag name';
+
+  @override
+  String get addTags => 'Add tag';
+
+  @override
+  String tagsAdded(String name) {
+    return 'Tagged \"$name\"';
+  }
+
+  @override
+  String get matchAny => 'Show songs matching any tag';
+
+  @override
+  String get pickTagsHint => 'Pick tags to list songs';
+
+  @override
+  String get deleteTag => 'Delete tag';
+
+  @override
+  String deleteTagConfirm(String name) {
+    return 'Delete the tag \"$name\"? The songs themselves won\'t be deleted.';
+  }
+
+  @override
+  String get deleteSongs => 'Delete songs';
+
+  @override
+  String deleteSongsConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'the files of these $count songs',
+      one: 'this song\'s file',
+    );
+    return 'Delete $_temp0 from your phone? This can\'t be undone.';
+  }
+
+  @override
+  String deleteFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 couldn\'t be deleted';
+  }
+
+  @override
+  String get saved => 'Saved';
+
+  @override
+  String get saving => 'Saving…';
+
+  @override
+  String writeFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files',
+      one: '1 file',
+    );
+    return '$_temp0 couldn\'t be written (the format may not be supported)';
+  }
+
+  @override
+  String get fileAccessTitle => 'File access needed';
+
+  @override
+  String get fileAccessBody =>
+      'Editing song info, deleting songs and backups change files on your phone directly. On the next screen, turn on \"Allow access to manage all files\".';
+
+  @override
+  String get goToSettings => 'Go to settings';
+
+  @override
+  String get backup => 'Backup';
+
+  @override
+  String get exportBackup => 'Export backup';
+
+  @override
+  String get exportBackupSubtitle => 'Playlists, favorites and tags';
+
+  @override
+  String get importBackup => 'Import backup';
+
+  @override
+  String exportedTo(String path) {
+    return 'Saved to $path';
+  }
+
+  @override
+  String get noBackupFound => 'No backup file in the Download folder';
+
+  @override
+  String importFailed(String error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String importDone(int found, int missing) {
+    return 'Imported $found songs; $missing aren\'t on this phone';
+  }
 }

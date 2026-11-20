@@ -6,12 +6,13 @@ import '../state/library.dart';
 import '../state/playlists.dart';
 import 'common.dart';
 
-/// 輸入播放清單名稱，取消時回傳 null。
+/// 輸入播放清單（或標籤）名稱，取消時回傳 null。
 Future<String?> askPlaylistName(
   BuildContext context, {
   String initial = '',
   required String title,
   required String confirmLabel,
+  String? label,
 }) {
   return showDialog<String>(
     context: context,
@@ -19,8 +20,40 @@ Future<String?> askPlaylistName(
       initial: initial,
       title: title,
       confirmLabel: confirmLabel,
+      label: label ?? context.l10n.playlistName,
     ),
   );
+}
+
+/// 紅色「刪除」按鈕的確認對話框，回傳是否確認。
+Future<bool> confirmDelete(
+  BuildContext context, {
+  required String title,
+  required String message,
+}) async {
+  final l10n = context.l10n;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.error,
+            foregroundColor: Theme.of(context).colorScheme.onError,
+          ),
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(l10n.delete),
+        ),
+      ],
+    ),
+  );
+  return confirmed ?? false;
 }
 
 /// 對話框自己持有輸入框的控制器，在元件真正移除時才釋放。
@@ -30,11 +63,13 @@ class _PlaylistNameDialog extends StatefulWidget {
     required this.initial,
     required this.title,
     required this.confirmLabel,
+    required this.label,
   });
 
   final String initial;
   final String title;
   final String confirmLabel;
+  final String label;
 
   @override
   State<_PlaylistNameDialog> createState() => _PlaylistNameDialogState();
@@ -61,7 +96,7 @@ class _PlaylistNameDialogState extends State<_PlaylistNameDialog> {
       content: TextField(
         controller: _controller,
         autofocus: true,
-        decoration: InputDecoration(labelText: context.l10n.playlistName),
+        decoration: InputDecoration(labelText: widget.label),
         onSubmitted: (_) => _submit(),
       ),
       actions: [
@@ -110,28 +145,12 @@ Future<bool> deletePlaylist(
   Playlist playlist,
 ) async {
   final l10n = context.l10n;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(l10n.deletePlaylist),
-      content: Text(l10n.deletePlaylistConfirm(playlist.name)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-          ),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(l10n.delete),
-        ),
-      ],
-    ),
+  final confirmed = await confirmDelete(
+    context,
+    title: l10n.deletePlaylist,
+    message: l10n.deletePlaylistConfirm(playlist.name),
   );
-  if (confirmed != true) return false;
+  if (!confirmed) return false;
   await ref.read(databaseProvider).deletePlaylist(playlist.id);
   return true;
 }

@@ -5,7 +5,7 @@ import '../data/database.dart';
 /// 佇列裡的一個位置。用物件身分區分同一首歌的多個副本。
 class _Item {
   _Item(this.song);
-  final Song song;
+  Song song;
 }
 
 /// 播放佇列的純邏輯（不碰播放器，方便測試）。
@@ -83,6 +83,13 @@ class PlayQueue {
     final item = _Item(song);
     _items.add(item);
     _original?.add(item);
+  }
+
+  /// 歌曲資訊被編輯後，換成資料庫裡的新版本（順序不變）。
+  void updateSongs(Map<int, Song> byId) {
+    for (final item in _items) {
+      item.song = byId[item.song.id] ?? item.song;
+    }
   }
 
   /// 回傳被移除的是不是目前這首。移除目前這首後，[index] 會指向接下來那首。

@@ -354,4 +354,143 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get drivingModeSubtitle => '縮小歌曲內的大小聲差距，安靜的段落不會被路噪蓋過';
+
+  @override
+  String selectedCount(int count) {
+    return '已選 $count 首';
+  }
+
+  @override
+  String get selectAll => '全選';
+
+  @override
+  String get clearSelection => '取消選取';
+
+  @override
+  String get selectionHint => '長按另一首可以連續選取';
+
+  @override
+  String get editInfo => '編輯資訊';
+
+  @override
+  String get editAlbum => '編輯專輯';
+
+  @override
+  String get fieldTitle => '歌名';
+
+  @override
+  String get fieldArtist => '演出者';
+
+  @override
+  String get fieldAlbum => '專輯';
+
+  @override
+  String get fieldAlbumArtist => '專輯演出者';
+
+  @override
+  String get fieldGenre => '曲風';
+
+  @override
+  String get fieldYear => '出版年份';
+
+  @override
+  String get changeCover => '更換封面';
+
+  @override
+  String get tags => '標籤';
+
+  @override
+  String get tagsEmpty => '還沒有任何標籤';
+
+  @override
+  String get newTag => '新增標籤';
+
+  @override
+  String get tagName => '標籤名稱';
+
+  @override
+  String get addTags => '加上標籤';
+
+  @override
+  String tagsAdded(String name) {
+    return '已加上「$name」';
+  }
+
+  @override
+  String get matchAny => '符合任一個就顯示';
+
+  @override
+  String get pickTagsHint => '選擇標籤來列出歌曲';
+
+  @override
+  String get deleteTag => '刪除標籤';
+
+  @override
+  String deleteTagConfirm(String name) {
+    return '要刪除標籤「$name」嗎？歌曲本身不會被刪除。';
+  }
+
+  @override
+  String get deleteSongs => '刪除歌曲';
+
+  @override
+  String deleteSongsConfirm(int count) {
+    return '要從手機刪除這 $count 首歌的檔案嗎？刪除後無法復原。';
+  }
+
+  @override
+  String deleteFailed(int count) {
+    return '有 $count 首刪除失敗';
+  }
+
+  @override
+  String get saved => '已儲存';
+
+  @override
+  String get saving => '儲存中…';
+
+  @override
+  String writeFailed(int count) {
+    return '有 $count 個檔案寫入失敗（可能是不支援的格式）';
+  }
+
+  @override
+  String get fileAccessTitle => '需要檔案存取權';
+
+  @override
+  String get fileAccessBody =>
+      '編輯歌曲資訊、刪除歌曲、備份需要直接修改手機上的檔案。請在接下來的設定頁打開「允許存取所有檔案」。';
+
+  @override
+  String get goToSettings => '前往設定';
+
+  @override
+  String get backup => '備份';
+
+  @override
+  String get exportBackup => '匯出備份';
+
+  @override
+  String get exportBackupSubtitle => '播放清單、我的最愛、標籤';
+
+  @override
+  String get importBackup => '匯入備份';
+
+  @override
+  String exportedTo(String path) {
+    return '已存到 $path';
+  }
+
+  @override
+  String get noBackupFound => '下載資料夾裡沒有備份檔';
+
+  @override
+  String importFailed(String error) {
+    return '匯入失敗：$error';
+  }
+
+  @override
+  String importDone(int found, int missing) {
+    return '已匯入 $found 首，$missing 首在這支手機上找不到';
+  }
 }

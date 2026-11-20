@@ -161,5 +161,91 @@
   "eqClassical": "Classical",
   "eqCustom": "Custom",
   "drivingMode": "Driving mode",
-  "drivingModeSubtitle": "Narrows the gap between quiet and loud parts so quiet passages aren't drowned out by road noise"
+  "drivingModeSubtitle": "Narrows the gap between quiet and loud parts so quiet passages aren't drowned out by road noise",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "selectAll": "Select all",
+  "clearSelection": "Clear selection",
+  "selectionHint": "Long-press another song to select a range",
+  "editInfo": "Edit info",
+  "editAlbum": "Edit album",
+  "fieldTitle": "Title",
+  "fieldArtist": "Artist",
+  "fieldAlbum": "Album",
+  "fieldAlbumArtist": "Album artist",
+  "fieldGenre": "Genre",
+  "fieldYear": "Year",
+  "changeCover": "Change cover",
+  "tags": "Tags",
+  "tagsEmpty": "No tags yet",
+  "newTag": "New tag",
+  "tagName": "Tag name",
+  "addTags": "Add tag",
+  "tagsAdded": "Tagged \"{name}\"",
+  "@tagsAdded": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "matchAny": "Show songs matching any tag",
+  "pickTagsHint": "Pick tags to list songs",
+  "deleteTag": "Delete tag",
+  "deleteTagConfirm": "Delete the tag \"{name}\"? The songs themselves won't be deleted.",
+  "@deleteTagConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "deleteSongs": "Delete songs",
+  "deleteSongsConfirm": "Delete {count, plural, =1{this song's file} other{the files of these {count} songs}} from your phone? This can't be undone.",
+  "@deleteSongsConfirm": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "deleteFailed": "{count, plural, =1{1 song} other{{count} songs}} couldn't be deleted",
+  "@deleteFailed": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "saved": "Saved",
+  "saving": "Saving…",
+  "writeFailed": "{count, plural, =1{1 file} other{{count} files}} couldn't be written (the format may not be supported)",
+  "@writeFailed": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "fileAccessTitle": "File access needed",
+  "fileAccessBody": "Editing song info, deleting songs and backups change files on your phone directly. On the next screen, turn on \"Allow access to manage all files\".",
+  "goToSettings": "Go to settings",
+  "backup": "Backup",
+  "exportBackup": "Export backup",
+  "exportBackupSubtitle": "Playlists, favorites and tags",
+  "importBackup": "Import backup",
+  "exportedTo": "Saved to {path}",
+  "@exportedTo": {
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+  "noBackupFound": "No backup file in the Download folder",
+  "importFailed": "Import failed: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "importDone": "Imported {found} songs; {missing} aren't on this phone",
+  "@importDone": {
+    "placeholders": {
+      "found": { "type": "int" },
+      "missing": { "type": "int" }
+    }
+  }
 }

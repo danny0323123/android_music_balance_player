@@ -7,15 +7,18 @@ import '../data/database.dart';
 class MediaStoreChannel {
   static const _channel = MethodChannel('music_balance/media');
 
-  static final _artFutures = <int, Future<String?>>{};
-  static final _artResolved = <int, String?>{};
+  static final _artFutures = <String, Future<String?>>{};
+  static final _artResolved = <String, String?>{};
 
   static Future<int> sdkInt() async =>
       await _channel.invokeMethod<int>('sdkInt') ?? 0;
 
-  static Future<List<SongsCompanion>> queryAudio() async {
+  /// [known]：已經算過指紋的歌（id → 當時的修改時間），沒改過的不重算指紋。
+  static Future<List<SongsCompanion>> queryAudio(Map<int, int> known) async {
     final rows =
-        await _channel.invokeListMethod<Map<Object?, Object?>>('queryAudio') ??
+        await _channel.invokeListMethod<Map<Object?, Object?>>('queryAudio', {
+          'known': known,
+        }) ??
         const [];
     return [
       for (final r in rows)
@@ -32,21 +35,56 @@ class MediaStoreChannel {
           trackNumber: (r['track'] as num).toInt(),
           dateAdded: (r['dateAdded'] as num).toInt(),
           dateModified: (r['dateModified'] as num).toInt(),
+          albumArtist: Value(r['albumArtist'] as String?),
+          genre: Value(r['genre'] as String?),
+          year: Value((r['year'] as num?)?.toInt()),
+          // 原生端這次有算指紋才更新，沒算的保留資料庫裡的
+          fingerprint: r.containsKey('fingerprint')
+              ? Value(r['fingerprint'] as String?)
+              : const Value.absent(),
+          fingerprintModified: r.containsKey('fingerprint')
+              ? Value((r['dateModified'] as num).toInt())
+              : const Value.absent(),
         ),
     ];
   }
 
-  /// 專輯封面的快取檔案路徑，沒有封面時回傳 null。同一張專輯只會向原生端要一次。
-  static Future<String?> albumArt(int albumId, int songId) {
-    return _artFutures[albumId] ??= _channel
+  /// 歌曲封面的快取檔案路徑，沒有封面時回傳 null。檔案改過（例如換了封面）會重新讀取。
+  static Future<String?> albumArt(Song song) {
+    final key = _artKey(song);
+    return _artFutures[key] ??= _channel
         .invokeMethod<String>('albumArt', {
-          'albumId': albumId,
-          'songId': songId,
+          'albumId': song.albumId,
+          'songId': song.id,
+          'modified': song.dateModified,
           'size': 512,
         })
         .catchError((Object _) => null)
-        .then((path) => _artResolved[albumId] = path);
+        .then((path) => _artResolved[key] = path);
   }
+
+  static String _artKey(Song song) => '${song.id}-${song.dateModified}';
+
+  /// 把標籤寫進檔案（[fields] 只放要改的，空字串表示清除），[artPath] 不為 null 時換封面。
+  /// 回傳寫入失敗的檔案路徑。
+  static Future<List<String>> writeTags(
+    List<String> paths,
+    Map<String, String> fields, {
+    String? artPath,
+  }) async =>
+      await _channel.invokeListMethod<String>('writeTags', {
+        'paths': paths,
+        'fields': fields,
+        'artPath': artPath,
+      }) ??
+      const [];
+
+  /// 回傳刪除失敗的檔案路徑。
+  static Future<List<String>> deleteFiles(List<String> paths) async =>
+      await _channel.invokeListMethod<String>('deleteFiles', {
+        'paths': paths,
+      }) ??
+      const [];
 
   /// 計算整首歌的響度（LUFS）。無法解碼時回傳 null 或拋出 [PlatformException]；
   /// 原生端沒有註冊（例如畫面還沒開過）時拋出 [MissingPluginException]。
@@ -63,5 +101,5 @@ class MediaStoreChannel {
   }
 
   /// 已經載入過的封面可以同步取得，避免清單捲動時閃爍。
-  static String? peekAlbumArt(int albumId) => _artResolved[albumId];
+  static String? peekAlbumArt(Song song) => _artResolved[_artKey(song)];
 }

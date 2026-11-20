@@ -105,8 +105,19 @@ void main() {
   test('album songs are in track order and albums carry artwork', () async {
     final albums = await library.children(MediaIds.albums);
     expect(albums.first.artUri.toString(), startsWith('content://'));
-    final songs = await library.songsOf(MediaIds.album(10));
+    final album10 = albums.firstWhere((a) => a.title == 'Album 10');
+    final songs = await library.songsOf(album10.id);
     expect([for (final s in songs!) s.id], [1, 2]);
+  });
+
+  test('tags are listed after playlists and browse their songs', () async {
+    final tag = await db.createTag('chill');
+    await db.addTagToSongs(tag, [3, 1]);
+    await db.createTag('unused');
+    final items = await library.children(MediaIds.playlists);
+    expect(ids(items), [MediaIds.favorites, MediaIds.tag(tag)]);
+    final songs = await library.songsOf(MediaIds.tag(tag));
+    expect([for (final s in songs!) s.id], [1, 3]); // Bravo, Charlie
   });
 
   test('playlists tab lists favorites then playlists', () async {

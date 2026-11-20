@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/library.dart';
 import '../state/settings.dart';
 import 'common.dart';
+import 'editing.dart';
 import 'playlists_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -175,10 +176,7 @@ class _SongsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final songs = ref.watch(sortedSongsProvider);
     if (songs.isEmpty) return const _EmptyLibrary();
-    return SongList(
-      songs: songs,
-      onRefresh: () => scanLibrary(context, ref),
-    );
+    return SongList(songs: songs, onRefresh: () => scanLibrary(context, ref));
   }
 }
 
@@ -221,10 +219,7 @@ class _AlbumsTab extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => SongListPage(
-                    title: albumName(context, album.name),
-                    songs: album.songs,
-                  ),
+                  builder: (_) => AlbumPage(albumKey: album.key),
                 ),
               ),
               child: Column(
@@ -232,11 +227,7 @@ class _AlbumsTab extends ConsumerWidget {
                 children: [
                   AspectRatio(
                     aspectRatio: 1,
-                    child: Artwork(
-                      albumId: album.id,
-                      songId: first.id,
-                      radius: 8,
-                    ),
+                    child: Artwork(song: first, radius: 8),
                   ),
                   const SizedBox(height: gap),
                   Text(
@@ -277,11 +268,7 @@ class _ArtistsTab extends ConsumerWidget {
           leading: const CircleAvatar(child: Icon(Icons.person)),
           title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text(context.l10n.songCount(artist.songs.length)),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => SongListPage(title: name, songs: artist.songs),
-            ),
-          ),
+          onTap: () => openArtist(context, artist),
         );
       },
     );
@@ -313,12 +300,76 @@ class _FoldersTab extends ConsumerWidget {
           ),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) =>
-                  SongListPage(title: folder.name, songs: folder.songs),
+              builder: (_) => SongListPage(
+                title: folder.name,
+                songs: (ref) =>
+                    ref
+                        .watch(foldersProvider)
+                        .where((f) => f.path == folder.path)
+                        .firstOrNull
+                        ?.songs ??
+                    const [],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+void openArtist(BuildContext context, Artist artist) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => SongListPage(
+        title: artistName(context, artist.name),
+        songs: (ref) =>
+            ref
+                .watch(artistsProvider)
+                .where((a) => a.name == artist.name)
+                .firstOrNull
+                ?.songs ??
+            const [],
+      ),
+    ),
+  );
+}
+
+/// 專輯頁。編輯專輯名稱或演出者後 key 會變，跟著換成新的 key。
+class AlbumPage extends ConsumerStatefulWidget {
+  const AlbumPage({super.key, required this.albumKey});
+
+  final String albumKey;
+
+  @override
+  ConsumerState<AlbumPage> createState() => _AlbumPageState();
+}
+
+class _AlbumPageState extends ConsumerState<AlbumPage> {
+  late String _key = widget.albumKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final album = ref
+        .watch(albumsProvider)
+        .where((a) => a.key == _key)
+        .firstOrNull;
+    return SongListPage(
+      title: albumName(context, album?.name),
+      songs: (_) => album?.songs ?? const [],
+      actions: [
+        if (album != null)
+          IconButton(
+            tooltip: context.l10n.editAlbum,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () async {
+              final key = await Navigator.of(context).push<String>(
+                MaterialPageRoute(builder: (_) => EditAlbumPage(album: album)),
+              );
+              if (key != null) setState(() => _key = key);
+            },
+          ),
+      ],
     );
   }
 }

@@ -20,6 +20,15 @@ final favoriteSongsProvider = StreamProvider<List<Song>>(
   (ref) => ref.watch(databaseProvider).watchFavoriteSongs(),
 );
 
+final tagsProvider = StreamProvider<List<TagSummary>>(
+  (ref) => ref.watch(databaseProvider).watchTags(),
+);
+
+/// 標籤 id → 有這個標籤的歌曲 id。
+final tagSongsProvider = StreamProvider<Map<int, Set<int>>>(
+  (ref) => ref.watch(databaseProvider).watchTagSongs(),
+);
+
 final isFavoriteProvider = Provider.family<bool, int>(
   (ref, songId) =>
       ref.watch(favoriteIdsProvider).value?.contains(songId) ?? false,

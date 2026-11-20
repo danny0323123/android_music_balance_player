@@ -46,6 +46,7 @@ android {
 
     defaultConfig {
         minSdk = 26
+        consumerProguardFiles("proguard-rules.pro")
     }
 
     testOptions {
@@ -64,5 +65,7 @@ kotlin {
 }
 
 dependencies {
+    // 寫入 MP3 / M4A / FLAC / OGG 的標籤與封面
+    implementation("net.jthink:jaudiotagger:3.0.1")
     testImplementation("junit:junit:4.13.2")
 }

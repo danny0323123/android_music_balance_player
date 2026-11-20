@@ -733,6 +733,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Narrows the gap between quiet and loud parts so quiet passages aren\'t drowned out by road noise'**
   String get drivingModeSubtitle;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get selectAll;
+
+  /// No description provided for @clearSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get clearSelection;
+
+  /// No description provided for @selectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press another song to select a range'**
+  String get selectionHint;
+
+  /// No description provided for @editInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit info'**
+  String get editInfo;
+
+  /// No description provided for @editAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit album'**
+  String get editAlbum;
+
+  /// No description provided for @fieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get fieldTitle;
+
+  /// No description provided for @fieldArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get fieldArtist;
+
+  /// No description provided for @fieldAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get fieldAlbum;
+
+  /// No description provided for @fieldAlbumArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Album artist'**
+  String get fieldAlbumArtist;
+
+  /// No description provided for @fieldGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get fieldGenre;
+
+  /// No description provided for @fieldYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get fieldYear;
+
+  /// No description provided for @changeCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Change cover'**
+  String get changeCover;
+
+  /// No description provided for @tags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tags;
+
+  /// No description provided for @tagsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags yet'**
+  String get tagsEmpty;
+
+  /// No description provided for @newTag.
+  ///
+  /// In en, this message translates to:
+  /// **'New tag'**
+  String get newTag;
+
+  /// No description provided for @tagName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag name'**
+  String get tagName;
+
+  /// No description provided for @addTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tag'**
+  String get addTags;
+
+  /// No description provided for @tagsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Tagged \"{name}\"'**
+  String tagsAdded(String name);
+
+  /// No description provided for @matchAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Show songs matching any tag'**
+  String get matchAny;
+
+  /// No description provided for @pickTagsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick tags to list songs'**
+  String get pickTagsHint;
+
+  /// No description provided for @deleteTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete tag'**
+  String get deleteTag;
+
+  /// No description provided for @deleteTagConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the tag \"{name}\"? The songs themselves won\'t be deleted.'**
+  String deleteTagConfirm(String name);
+
+  /// No description provided for @deleteSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete songs'**
+  String get deleteSongs;
+
+  /// No description provided for @deleteSongsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count, plural, =1{this song\'s file} other{the files of these {count} songs}} from your phone? This can\'t be undone.'**
+  String deleteSongsConfirm(int count);
+
+  /// No description provided for @deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} couldn\'t be deleted'**
+  String deleteFailed(int count);
+
+  /// No description provided for @saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get saved;
+
+  /// No description provided for @saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get saving;
+
+  /// No description provided for @writeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 file} other{{count} files}} couldn\'t be written (the format may not be supported)'**
+  String writeFailed(int count);
+
+  /// No description provided for @fileAccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'File access needed'**
+  String get fileAccessTitle;
+
+  /// No description provided for @fileAccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing song info, deleting songs and backups change files on your phone directly. On the next screen, turn on \"Allow access to manage all files\".'**
+  String get fileAccessBody;
+
+  /// No description provided for @goToSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to settings'**
+  String get goToSettings;
+
+  /// No description provided for @backup.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backup;
+
+  /// No description provided for @exportBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Export backup'**
+  String get exportBackup;
+
+  /// No description provided for @exportBackupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists, favorites and tags'**
+  String get exportBackupSubtitle;
+
+  /// No description provided for @importBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Import backup'**
+  String get importBackup;
+
+  /// No description provided for @exportedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {path}'**
+  String exportedTo(String path);
+
+  /// No description provided for @noBackupFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup file in the Download folder'**
+  String get noBackupFound;
+
+  /// No description provided for @importFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}'**
+  String importFailed(String error);
+
+  /// No description provided for @importDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {found} songs; {missing} aren\'t on this phone'**
+  String importDone(int found, int missing);
 }
 
 class _AppLocalizationsDelegate

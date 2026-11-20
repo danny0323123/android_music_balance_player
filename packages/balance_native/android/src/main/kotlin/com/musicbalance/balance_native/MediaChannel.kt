@@ -38,12 +38,28 @@ class MediaChannel(private val context: Context) : MethodChannel.MethodCallHandl
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "sdkInt" -> result.success(Build.VERSION.SDK_INT)
-            "queryAudio" -> runAsync(result) { queryAudio() }
+            "queryAudio" -> {
+                // 已經有指紋、且檔案沒改過的歌：id → dateModified，不用重算
+                val known = call.argument<Map<Number, Number>>("known").orEmpty()
+                    .entries.associate { it.key.toLong() to it.value.toLong() }
+                runAsync(result) { queryAudio(known) }
+            }
             "albumArt" -> {
                 val albumId = call.argument<Number>("albumId")!!.toLong()
                 val songId = call.argument<Number>("songId")!!.toLong()
+                val modified = call.argument<Number>("modified")!!.toLong()
                 val size = call.argument<Int>("size") ?: AlbumArt.SIZE
-                runAsync(result) { albumArt(albumId, songId, size) }
+                runAsync(result) { AlbumArt.file(context, albumId, songId, modified, size)?.path }
+            }
+            "writeTags" -> {
+                val paths = call.argument<List<String>>("paths")!!
+                val fields = call.argument<Map<String, String>>("fields").orEmpty()
+                val art = call.argument<String>("artPath")
+                runAsync(result) { AudioFiles.writeTags(context, paths, fields, art) }
+            }
+            "deleteFiles" -> {
+                val paths = call.argument<List<String>>("paths")!!
+                runAsync(result) { AudioFiles.delete(context, paths) }
             }
             "analyzeLoudness" -> {
                 val uri = Uri.parse(call.argument<String>("uri")!!)
@@ -73,8 +89,10 @@ class MediaChannel(private val context: Context) : MethodChannel.MethodCallHandl
         }
     }
 
-    private fun queryAudio(): List<Map<String, Any?>> {
+    private fun queryAudio(known: Map<Long, Long>): List<Map<String, Any?>> {
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        // 曲風、專輯演出者欄位 Android 11 起才公開
+        val hasGenre = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
@@ -86,14 +104,15 @@ class MediaChannel(private val context: Context) : MethodChannel.MethodCallHandl
             MediaStore.Audio.Media.DATE_ADDED,
             MediaStore.Audio.Media.DATE_MODIFIED,
             MediaStore.Audio.Media.DATA,
-        )
+            MediaStore.Audio.Media.YEAR,
+        ) + if (hasGenre) arrayOf(MediaStore.Audio.Media.GENRE, MediaStore.Audio.Media.ALBUM_ARTIST) else emptyArray()
         // 排除鈴聲、通知音、鬧鐘音；其他太短的檔案由 Dart 端依設定過濾。
         // 用 IS NOT 1 而不是 = 0：小米等系統這些欄位是 NULL，= 0 會把所有歌都濾掉
         val selection = "${MediaStore.Audio.Media.IS_RINGTONE} IS NOT 1 AND " +
             "${MediaStore.Audio.Media.IS_NOTIFICATION} IS NOT 1 AND " +
             "${MediaStore.Audio.Media.IS_ALARM} IS NOT 1"
 
-        val songs = mutableListOf<Map<String, Any?>>()
+        val songs = mutableListOf<MutableMap<String, Any?>>()
         context.contentResolver.query(collection, projection, selection, null, null)?.use { c ->
             val idCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val titleCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
@@ -105,13 +124,16 @@ class MediaChannel(private val context: Context) : MethodChannel.MethodCallHandl
             val addedCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
             val modifiedCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED)
             val dataCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+            val yearCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
+            val genreCol = if (hasGenre) c.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE) else -1
+            val albumArtistCol = if (hasGenre) c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ARTIST) else -1
 
             while (c.moveToNext()) {
                 val id = c.getLong(idCol)
                 val path = c.getString(dataCol) ?: continue
                 val file = File(path)
                 songs.add(
-                    mapOf(
+                    mutableMapOf(
                         "id" to id,
                         "uri" to ContentUris.withAppendedId(collection, id).toString(),
                         "path" to path,
@@ -125,9 +147,26 @@ class MediaChannel(private val context: Context) : MethodChannel.MethodCallHandl
                         "track" to c.getInt(trackCol),
                         "dateAdded" to c.getLong(addedCol),
                         "dateModified" to c.getLong(modifiedCol),
+                        "year" to c.getInt(yearCol).takeIf { it > 0 },
+                        "genre" to (if (genreCol >= 0) c.getString(genreCol).orUnknownNull() else null),
+                        "albumArtist" to (if (albumArtistCol >= 0) c.getString(albumArtistCol).orUnknownNull() else null),
                     )
                 )
             }
+        }
+
+        // 新加入或改過的檔案才算指紋，同時讀 4 個檔案
+        val pool = Executors.newFixedThreadPool(4)
+        try {
+            songs.filter { known[it["id"] as Long] != it["dateModified"] as Long }
+                .map { song ->
+                    pool.submit {
+                        song["fingerprint"] = Fingerprint.of(context, Uri.parse(song["uri"] as String))
+                    }
+                }
+                .forEach { it.get() }
+        } finally {
+            pool.shutdown()
         }
         return songs
     }
@@ -136,18 +175,19 @@ class MediaChannel(private val context: Context) : MethodChannel.MethodCallHandl
     private fun String?.orUnknownNull(): String? =
         this?.takeIf { it.isNotBlank() && it != MediaStore.UNKNOWN_STRING }
 
-    private fun albumArt(albumId: Long, songId: Long, size: Int): String? =
-        AlbumArt.file(context, albumId, songId, size)?.path
 }
 
-/** 專輯封面快取，app 畫面、桌面小工具、Android Auto（[ArtProvider]）共用。 */
+/** 歌曲封面快取，app 畫面、桌面小工具、Android Auto（[ArtProvider]）共用。 */
 object AlbumArt {
     const val SIZE = 512
 
-    /** 把封面縮圖存到 cache 資料夾並回傳檔案；沒有封面時回傳 null。 */
-    fun file(context: Context, albumId: Long, songId: Long, size: Int = SIZE): File? {
+    /**
+     * 把封面縮圖存到 cache 資料夾並回傳檔案；沒有封面時回傳 null。
+     * 檔名含修改時間：在 app 裡換了封面後，自動改用新的快取。
+     */
+    fun file(context: Context, albumId: Long, songId: Long, modified: Long, size: Int = SIZE): File? {
         val dir = File(context.cacheDir, "art").apply { mkdirs() }
-        val file = File(dir, "$albumId-$size.jpg")
+        val file = File(dir, "$songId-$modified-$size.jpg")
         if (file.exists()) return file
 
         val bitmap = try {

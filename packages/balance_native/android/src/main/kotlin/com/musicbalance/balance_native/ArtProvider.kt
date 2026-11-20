@@ -11,7 +11,7 @@ import java.io.FileNotFoundException
  * 提供專輯封面給 Android Auto。Auto 在別的程序裡，讀不到 app 的快取檔案，
  * 也沒有讀取音樂的權限，所以由這裡把封面開給它。
  *
- * 網址格式：content://<applicationId>.art/<albumId>/<songId>
+ * 網址格式：content://<applicationId>.art/<albumId>/<songId>/<dateModified>
  */
 class ArtProvider : ContentProvider() {
     override fun onCreate() = true
@@ -20,8 +20,11 @@ class ArtProvider : ContentProvider() {
         val segments = uri.pathSegments
         val albumId = segments.getOrNull(0)?.toLongOrNull()
         val songId = segments.getOrNull(1)?.toLongOrNull()
-        if (albumId == null || songId == null || mode != "r") throw FileNotFoundException(uri.toString())
-        val file = AlbumArt.file(context!!, albumId, songId) ?: throw FileNotFoundException(uri.toString())
+        val modified = segments.getOrNull(2)?.toLongOrNull()
+        if (albumId == null || songId == null || modified == null || mode != "r") {
+            throw FileNotFoundException(uri.toString())
+        }
+        val file = AlbumArt.file(context!!, albumId, songId, modified) ?: throw FileNotFoundException(uri.toString())
         return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
     }
 

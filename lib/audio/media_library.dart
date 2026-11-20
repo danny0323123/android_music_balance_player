@@ -20,7 +20,8 @@ abstract final class MediaIds {
   static const favorites = 'favorites';
 
   static String playlist(int id) => 'playlist:$id';
-  static String album(int id) => 'album:$id';
+  static String tag(int id) => 'tag:$id';
+  static String album(String key) => 'album:${Uri.encodeComponent(key)}';
   static String artist(String? name) =>
       'artist:${Uri.encodeComponent(name ?? '')}';
   static String search(String query) => 'search:${Uri.encodeComponent(query)}';
@@ -79,8 +80,10 @@ class MediaLibrary {
           _folder(MediaIds.artists, l10n.tabArtists),
         ];
       case MediaIds.playlists:
+        // Android Auto 最多 4 個分頁，標籤放在播放清單後面
         final favorites = await _db.watchFavoriteSongs().first;
         final playlists = await _db.watchPlaylists().first;
+        final tags = await _db.watchTags().first;
         return [
           _folder(
             MediaIds.favorites,
@@ -93,12 +96,19 @@ class MediaLibrary {
               p.playlist.name,
               subtitle: l10n.songCount(p.songCount),
             ),
+          for (final t in tags)
+            if (t.songCount > 0)
+              _folder(
+                MediaIds.tag(t.tag.id),
+                '# ${t.tag.name}',
+                subtitle: l10n.songCount(t.songCount),
+              ),
         ];
       case MediaIds.albums:
         return [
           for (final a in groupAlbums(await _library()))
             _folder(
-              MediaIds.album(a.id),
+              MediaIds.album(a.key),
               a.name ?? l10n.unknownAlbum,
               subtitle: a.artist ?? l10n.unknownArtist,
               artUri: artUri(a.songs.first),
@@ -145,13 +155,20 @@ class MediaLibrary {
         if (id == null) return null;
         final entries = await _db.watchPlaylistEntries(id).first;
         return [for (final e in entries) e.song];
-      case 'album':
+      case 'tag':
         final id = int.tryParse(key);
-        final songs = [
+        if (id == null) return null;
+        final ids = (await _db.watchTagSongs().first)[id] ?? const {};
+        return sortSongs([
           for (final s in await _library())
-            if (s.albumId == id) s,
-        ];
-        return groupAlbums(songs).firstOrNull?.songs;
+            if (ids.contains(s.id)) s,
+        ], _settings);
+      case 'album':
+        final albumKey = Uri.decodeComponent(key);
+        return groupAlbums(await _library())
+            .where((a) => a.key == albumKey)
+            .firstOrNull
+            ?.songs;
       case 'artist':
         final name = Uri.decodeComponent(key);
         final songs = [
@@ -213,8 +230,9 @@ class MediaLibrary {
         playable: true,
       );
 
-  static Uri artUri(Song song) =>
-      Uri.parse('content://$_artAuthority/${song.albumId}/${song.id}');
+  static Uri artUri(Song song) => Uri.parse(
+    'content://$_artAuthority/${song.albumId}/${song.id}/${song.dateModified}',
+  );
 
   MediaItem _folder(
     String id,

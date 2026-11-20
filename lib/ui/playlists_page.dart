@@ -7,6 +7,7 @@ import '../state/player.dart';
 import '../state/playlists.dart';
 import 'common.dart';
 import 'playlist_dialogs.dart';
+import 'tags_page.dart';
 
 /// 「播放清單」分頁：最上面是我的最愛，接著是自己建立的清單。
 class PlaylistsTab extends ConsumerWidget {
@@ -17,6 +18,7 @@ class PlaylistsTab extends ConsumerWidget {
     final l10n = context.l10n;
     final playlists = ref.watch(playlistsProvider).value ?? const [];
     final favoriteCount = ref.watch(favoriteSongsProvider).value?.length ?? 0;
+    final tagCount = ref.watch(tagsProvider).value?.length ?? 0;
 
     return ListView(
       children: [
@@ -26,6 +28,14 @@ class PlaylistsTab extends ConsumerWidget {
           subtitle: Text(l10n.songCount(favoriteCount)),
           onTap: () => Navigator.of(context)
               .push(MaterialPageRoute(builder: (_) => const FavoritesPage())),
+        ),
+        ListTile(
+          leading: const CircleAvatar(child: Icon(Icons.sell)),
+          title: Text(l10n.tags),
+          subtitle: Text('$tagCount'),
+          onTap: () =>
+              Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (_) => const TagsPage())),
         ),
         for (final p in playlists)
           ListTile(
@@ -143,11 +153,7 @@ class _PlaylistPageState extends ConsumerState<PlaylistPage> {
                 final song = entry.song;
                 return ListTile(
                   key: ValueKey(entry.itemId),
-                  leading: Artwork(
-                    albumId: song.albumId,
-                    songId: song.id,
-                    size: 48,
-                  ),
+                  leading: Artwork(song: song, size: 48),
                   title: Text(
                     song.title,
                     maxLines: 1,

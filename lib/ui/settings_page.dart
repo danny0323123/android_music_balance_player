@@ -7,6 +7,7 @@ import '../state/library.dart';
 import '../state/loudness.dart';
 import '../state/settings.dart';
 import 'common.dart';
+import 'editing.dart';
 import 'equalizer_page.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -130,6 +131,18 @@ class SettingsPage extends ConsumerWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const _ExcludedFoldersPage()),
             ),
+          ),
+          section(l10n.backup),
+          ListTile(
+            leading: const Icon(Icons.upload_file),
+            title: Text(l10n.exportBackup),
+            subtitle: Text(l10n.exportBackupSubtitle),
+            onTap: () => exportBackup(context, ref),
+          ),
+          ListTile(
+            leading: const Icon(Icons.restore),
+            title: Text(l10n.importBackup),
+            onTap: () => importBackup(context, ref),
           ),
           section(l10n.settingsPlayback),
           ListTile(

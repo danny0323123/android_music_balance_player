@@ -164,16 +164,40 @@ class PlayerHandler extends BaseAudioHandler with SeekHandler {
     await _load(_queue.index, play: true);
   }
 
-  Future<void> playNext(Song song) async {
-    if (_queue.isEmpty) return playSongs([song], 0);
-    _queue.insertNext(song);
+  Future<void> playNext(List<Song> songs) async {
+    if (_queue.isEmpty) return playSongs(songs, 0);
+    // 倒著插到目前這首後面，順序才會和 songs 一樣
+    for (final s in songs.reversed) {
+      _queue.insertNext(s);
+    }
     _publishQueue();
   }
 
-  Future<void> addToQueue(Song song) async {
-    if (_queue.isEmpty) return playSongs([song], 0);
-    _queue.add(song);
+  Future<void> addToQueue(List<Song> songs) async {
+    if (_queue.isEmpty) return playSongs(songs, 0);
+    for (final s in songs) {
+      _queue.add(s);
+    }
     _publishQueue();
+  }
+
+  /// 重新掃描後，佇列裡的歌換成最新的資訊（編輯過的歌名、封面）。
+  Future<void> refreshSongs() async {
+    await _ready;
+    if (_queue.isEmpty) return;
+    final fresh = await _db.songsByIds([for (final s in _queue.songs) s.id]);
+    _queue.updateSongs({for (final s in fresh) s.id: s});
+    _publishQueue();
+    final song = _queue.current!;
+    mediaItem.add(_toMediaItem(song));
+    _loadArt(song);
+  }
+
+  /// 歌曲檔案被刪除後，從佇列拿掉。
+  Future<void> removeSongs(Set<int> songIds) async {
+    for (var i = _queue.length - 1; i >= 0; i--) {
+      if (songIds.contains(_queue.songs[i].id)) await removeQueueItemAt(i);
+    }
   }
 
   @override
@@ -390,7 +414,7 @@ class PlayerHandler extends BaseAudioHandler with SeekHandler {
   }
 
   Future<void> _loadArt(Song song) async {
-    final path = await MediaStoreChannel.albumArt(song.albumId, song.id);
+    final path = await MediaStoreChannel.albumArt(song);
     if (path != null && currentSong?.id == song.id) {
       mediaItem.add(_toMediaItem(song, artPath: path));
     }

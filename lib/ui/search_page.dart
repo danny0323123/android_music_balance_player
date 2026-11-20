@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/database.dart';
 import '../state/library.dart';
-import '../state/player.dart';
 import 'common.dart';
+import 'home_page.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -51,47 +51,37 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           onChanged: (v) => setState(() => _query = v),
         ),
       ),
-      body: q.isNotEmpty && songs.isEmpty && albums.isEmpty && artists.isEmpty
+      body: q.isEmpty
+          ? const SizedBox.shrink()
+          : songs.isEmpty && albums.isEmpty && artists.isEmpty
           ? Center(child: Text(l10n.noResults))
-          : ListView(
-              children: [
+          : SongList(
+              songs: songs,
+              leading: [
                 if (artists.isNotEmpty) header(l10n.tabArtists),
                 for (final a in artists)
                   ListTile(
                     leading: const CircleAvatar(child: Icon(Icons.person)),
                     title: Text(artistName(context, a.name)),
                     subtitle: Text(l10n.songCount(a.songs.length)),
-                    onTap: () => _open(artistName(context, a.name), a.songs),
+                    onTap: () => openArtist(context, a),
                   ),
                 if (albums.isNotEmpty) header(l10n.tabAlbums),
                 for (final a in albums)
                   ListTile(
-                    leading: Artwork(
-                      albumId: a.id,
-                      songId: a.songs.first.id,
-                      size: 48,
-                    ),
+                    leading: Artwork(song: a.songs.first, size: 48),
                     title: Text(albumName(context, a.name)),
                     subtitle: Text(artistName(context, a.artist)),
-                    onTap: () => _open(albumName(context, a.name), a.songs),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => AlbumPage(albumKey: a.key),
+                      ),
+                    ),
                   ),
                 if (songs.isNotEmpty) header(l10n.tabSongs),
-                for (final (i, song) in songs.indexed)
-                  SongTile(
-                    song: song,
-                    onTap: () => ref.read(playerProvider).playSongs(songs, i),
-                  ),
               ],
             ),
       bottomNavigationBar: const SafeArea(top: false, child: MiniPlayer()),
-    );
-  }
-
-  void _open(String title, List<Song> songs) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SongListPage(title: title, songs: songs),
-      ),
     );
   }
 }

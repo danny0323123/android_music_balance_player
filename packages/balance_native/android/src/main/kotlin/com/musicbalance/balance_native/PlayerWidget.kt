@@ -39,6 +39,7 @@ class WidgetChannel(private val context: Context) : MethodChannel.MethodCallHand
                     playing = call.argument<Boolean>("playing") ?: false,
                     albumId = call.argument<Number>("albumId")?.toLong(),
                     songId = call.argument<Number>("songId")?.toLong(),
+                    modified = call.argument<Number>("modified")?.toLong(),
                 )
                 PlayerWidget.renderAsync(context)
                 result.success(null)
@@ -58,7 +59,7 @@ object PlayerWidget {
     private const val MEDIA_BUTTON_RECEIVER = "com.ryanheise.audioservice.MediaButtonReceiver"
 
     private val executor = Executors.newSingleThreadExecutor()
-    private var cachedArtKey: Long? = null
+    private var cachedArtKey: String? = null
     private var cachedArt: Bitmap? = null
 
     fun save(
@@ -68,6 +69,7 @@ object PlayerWidget {
         playing: Boolean,
         albumId: Long?,
         songId: Long?,
+        modified: Long?,
     ) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString("title", title)
@@ -75,6 +77,7 @@ object PlayerWidget {
             .putBoolean("playing", playing)
             .putLong("albumId", albumId ?: -1)
             .putLong("songId", songId ?: -1)
+            .putLong("modified", modified ?: 0)
             .apply()
     }
 
@@ -99,7 +102,11 @@ object PlayerWidget {
             R.id.widget_subtitle,
             if (hasSong) prefs.getString("subtitle", "") else context.getString(R.string.widget_empty_subtitle),
         )
-        val art = if (hasSong) art(context, prefs.getLong("albumId", -1), prefs.getLong("songId", -1)) else null
+        val art = if (hasSong) {
+            art(context, prefs.getLong("albumId", -1), prefs.getLong("songId", -1), prefs.getLong("modified", 0))
+        } else {
+            null
+        }
         if (art != null) {
             views.setImageViewBitmap(R.id.widget_art, art)
         } else {
@@ -131,14 +138,15 @@ object PlayerWidget {
     }
 
     /** 小工具的圖片有大小限制，用 512 的快取縮成 256。 */
-    private fun art(context: Context, albumId: Long, songId: Long): Bitmap? {
-        if (albumId < 0) return null
-        if (cachedArtKey == albumId) return cachedArt
-        val file = AlbumArt.file(context, albumId, songId)
+    private fun art(context: Context, albumId: Long, songId: Long, modified: Long): Bitmap? {
+        if (songId < 0) return null
+        val key = "$songId-$modified"
+        if (cachedArtKey == key) return cachedArt
+        val file = AlbumArt.file(context, albumId, songId, modified)
         val bitmap = file?.let {
             BitmapFactory.decodeFile(it.path, BitmapFactory.Options().apply { inSampleSize = 2 })
         }
-        cachedArtKey = albumId
+        cachedArtKey = key
         cachedArt = bitmap
         return bitmap
     }

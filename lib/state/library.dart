@@ -6,6 +6,7 @@ import '../data/database.dart';
 import '../data/library_groups.dart';
 import '../platform/media_store.dart';
 import 'loudness.dart';
+import 'player.dart';
 import 'settings.dart';
 
 export '../data/library_groups.dart';
@@ -58,11 +59,15 @@ class ScanNotifier extends Notifier<bool> {
     if (state) return;
     state = true;
     try {
-      final scanned = await MediaStoreChannel.queryAudio();
-      await ref.read(databaseProvider).replaceLibrary(scanned);
+      final db = ref.read(databaseProvider);
+      final scanned = await MediaStoreChannel.queryAudio(
+        await db.fingerprintedSongs(),
+      );
+      await db.replaceLibrary(scanned);
     } finally {
       state = false;
     }
+    await ref.read(playerProvider).refreshSongs();
     // 掃描完接著在背景分析新加入（或被修改過）的歌的響度
     unawaited(ref.read(loudnessProvider).start());
   }

@@ -2,7 +2,7 @@ name: music_balance
 description: "Music player with per-song loudness normalization."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.13.7
@@ -25,6 +25,7 @@ dependencies:
   intl: ^0.20.3
   balance_native:
     path: packages/balance_native
+  image_picker: ^1.2.4
 
 dev_dependencies:
   flutter_test:

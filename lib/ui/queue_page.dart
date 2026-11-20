@@ -78,11 +78,7 @@ class _QueuePageState extends ConsumerState<QueuePage> {
                 final isCurrent = i == _queue.index;
                 return ListTile(
                   key: ValueKey('$i-${song.id}'),
-                  leading: Artwork(
-                    albumId: song.albumId,
-                    songId: song.id,
-                    size: 48,
-                  ),
+                  leading: Artwork(song: song, size: 48),
                   title: Text(
                     song.title,
                     maxLines: 1,

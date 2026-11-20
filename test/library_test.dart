@@ -5,19 +5,31 @@ import 'package:music_balance/data/database.dart';
 import 'package:music_balance/state/library.dart';
 import 'package:music_balance/ui/common.dart';
 
-SongsCompanion _song(int id, {String title = 't', int modified = 1}) =>
-    SongsCompanion.insert(
-      id: Value(id),
-      uri: 'content://media/external/audio/media/$id',
-      path: '/storage/emulated/0/Music/$id.mp3',
-      folder: '/storage/emulated/0/Music',
-      title: title,
-      albumId: 1,
-      durationMs: 180000,
-      trackNumber: 0,
-      dateAdded: 1,
-      dateModified: modified,
-    );
+SongsCompanion _song(
+  int id, {
+  String title = 't',
+  int modified = 1,
+  String? fingerprint,
+  String? album,
+  String? albumArtist,
+}) => SongsCompanion.insert(
+  id: Value(id),
+  uri: 'content://media/external/audio/media/$id',
+  path: '/storage/emulated/0/Music/$id.mp3',
+  folder: '/storage/emulated/0/Music',
+  title: title,
+  album: Value(album),
+  albumArtist: Value(albumArtist),
+  albumId: 1,
+  durationMs: 180000,
+  trackNumber: 0,
+  dateAdded: 1,
+  dateModified: modified,
+  fingerprint: fingerprint == null ? const Value.absent() : Value(fingerprint),
+  fingerprintModified: fingerprint == null
+      ? const Value.absent()
+      : Value(modified),
+);
 
 void main() {
   group('replaceLibrary', () {
@@ -125,6 +137,119 @@ void main() {
       await db.setFavorite(1, false);
       expect(await db.watchFavoriteIds().first, {3});
     });
+  });
+
+  group('fingerprints, tags, backup', () {
+    late AppDatabase db;
+
+    setUp(() => db = AppDatabase.forTesting(NativeDatabase.memory()));
+    tearDown(() => db.close());
+
+    test('only rescans fingerprints of songs that changed', () async {
+      await db.replaceLibrary([_song(1, fingerprint: 'a'), _song(2)]);
+      expect(await db.fingerprintedSongs(), {1: 1});
+      // 這次原生端沒有重算（absent），保留原本的指紋
+      await db.replaceLibrary([_song(1), _song(2)]);
+      final song = (await db.songsByIds([1])).single;
+      expect(song.fingerprint, 'a');
+    });
+
+    test('a moved file keeps its playlists, favorite and tags', () async {
+      await db.replaceLibrary([_song(1, fingerprint: 'a'), _song(2)]);
+      final list = await db.createPlaylist('Drive');
+      await db.addToPlaylist(list, await db.songsByIds([1, 2]));
+      await db.setFavorite(1, true);
+      final tag = await db.createTag('chill');
+      await db.addTagToSongs(tag, [1]);
+
+      // 搬到別的資料夾後系統給了新的 id 7
+      await db.replaceLibrary([_song(7, fingerprint: 'a'), _song(2)]);
+
+      expect(
+        [for (final e in await db.watchPlaylistEntries(list).first) e.song.id],
+        [7, 2],
+      );
+      expect(await db.watchFavoriteIds().first, {7});
+      expect(await db.watchTagSongs().first, {
+        tag: {7},
+      });
+    });
+
+    test('tags count only songs still on the phone', () async {
+      await db.replaceLibrary([_song(1), _song(2)]);
+      final tag = await db.createTag('chill');
+      expect(await db.createTag('chill'), tag);
+      await db.addTagToSongs(tag, [1, 2]);
+      await db.replaceLibrary([_song(1)]);
+      expect((await db.watchTags().first).single.songCount, 1);
+      await db.setSongTags(1, {});
+      expect(await db.tagIdsOf(1), isEmpty);
+    });
+
+    test('backup round-trips by fingerprint onto another phone', () async {
+      await db.replaceLibrary([
+        _song(1, fingerprint: 'a'),
+        _song(2, fingerprint: 'b'),
+      ]);
+      final list = await db.createPlaylist('Drive');
+      await db.addToPlaylist(list, await db.songsByIds([2, 1]));
+      await db.setFavorite(2, true);
+      await db.addTagToSongs(await db.createTag('chill'), [1]);
+      final backup = await db.exportBackup();
+
+      // 新手機：同樣的歌、不同的 id，少了 b
+      final other = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(other.close);
+      await other.replaceLibrary([_song(50, fingerprint: 'a')]);
+      final result = await other.importBackup(backup);
+
+      expect(result.found, 1);
+      expect(result.missing, 1);
+      final playlist = (await other.watchPlaylists().first).single;
+      expect(playlist.playlist.name, 'Drive');
+      expect(
+        [
+          for (final e
+              in await other.watchPlaylistEntries(playlist.playlist.id).first)
+            e.song.id,
+        ],
+        [50],
+      );
+      expect(await other.watchFavoriteIds().first, isEmpty);
+      final tags = await other.watchTags().first;
+      expect(tags.single.tag.name, 'chill');
+      expect(tags.single.songCount, 1);
+    });
+  });
+
+  test('albums group by name and album artist', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.replaceLibrary([
+      _song(1, album: 'Hits'),
+      _song(2, album: 'Hits'),
+      _song(3, album: 'Hits', albumArtist: 'Band'),
+    ]);
+    final albums = groupAlbums(await db.select(db.songs).get());
+    expect(albums.map((a) => a.songs.length), unorderedEquals([2, 1]));
+    expect(albums.map((a) => a.key).toSet(), {'Hits\u0000', 'Hits\u0000Band'});
+  });
+
+  test('filterByTags matches all tags, or any when asked', () async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.replaceLibrary([_song(1), _song(2), _song(3)]);
+    final songs = await db.select(db.songs).get();
+    final tagSongs = {
+      10: {1, 2},
+      20: {2, 3},
+    };
+    List<int> ids(Set<int> tags, {bool any = false}) => [
+      for (final s in filterByTags(songs, tagSongs, tags, matchAny: any)) s.id,
+    ];
+    expect(ids({10, 20}), [2]);
+    expect(ids({10, 20}, any: true), [1, 2, 3]);
+    expect(ids({}), isEmpty);
   });
 
   test('isFolderExcluded matches the folder and its subfolders only', () {

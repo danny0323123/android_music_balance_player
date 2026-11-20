@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import '../platform/media_store.dart';
 import '../state/library.dart';
 import '../state/player.dart';
 import '../state/playlists.dart';
+import 'editing.dart';
 import 'playlist_dialogs.dart';
 
 extension L10nContext on BuildContext {
@@ -48,18 +50,11 @@ String artistName(BuildContext context, String? artist) =>
 String albumName(BuildContext context, String? album) =>
     album ?? context.l10n.unknownAlbum;
 
-/// 專輯封面；沒有封面時顯示音符圖示。[size] 為 null 時填滿父元件。
+/// 歌曲封面；沒有封面時顯示音符圖示。[size] 為 null 時填滿父元件。
 class Artwork extends StatelessWidget {
-  const Artwork({
-    super.key,
-    required this.albumId,
-    required this.songId,
-    this.size,
-    this.radius = 6,
-  });
+  const Artwork({super.key, required this.song, this.size, this.radius = 6});
 
-  final int albumId;
-  final int songId;
+  final Song song;
   final double? size;
   final double radius;
 
@@ -73,8 +68,8 @@ class Artwork extends StatelessWidget {
         width: size,
         height: size,
         child: FutureBuilder<String?>(
-          future: MediaStoreChannel.albumArt(albumId, songId),
-          initialData: MediaStoreChannel.peekAlbumArt(albumId),
+          future: MediaStoreChannel.albumArt(song),
+          initialData: MediaStoreChannel.peekAlbumArt(song),
           builder: (context, snap) {
             final path = snap.data;
             if (path == null) return const _ArtPlaceholder();
@@ -112,17 +107,29 @@ class _ArtPlaceholder extends StatelessWidget {
 }
 
 class SongTile extends ConsumerWidget {
-  const SongTile({super.key, required this.song, required this.onTap});
+  const SongTile({
+    super.key,
+    required this.song,
+    required this.onTap,
+    this.onLongPress,
+    this.selected,
+  });
 
   final Song song;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  /// 多選模式時不為 null，右邊顯示勾選框取代選單。
+  final bool? selected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isCurrent = ref.watch(currentSongIdProvider) == song.id;
     final color = isCurrent ? Theme.of(context).colorScheme.primary : null;
+    final selected = this.selected;
     return ListTile(
-      leading: Artwork(albumId: song.albumId, songId: song.id, size: 48),
+      selected: selected ?? false,
+      leading: Artwork(song: song, size: 48),
       title: Text(
         song.title,
         maxLines: 1,
@@ -134,8 +141,11 @@ class SongTile extends ConsumerWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: SongMenuButton(song: song),
+      trailing: selected == null
+          ? SongMenuButton(song: song)
+          : Checkbox(value: selected, onChanged: (_) => onTap()),
       onTap: onTap,
+      onLongPress: onLongPress,
     );
   }
 }
@@ -164,14 +174,14 @@ class SongMenuButton extends ConsumerWidget {
       itemBuilder: (_) => [
         PopupMenuItem(
           value: () {
-            ref.read(playerProvider).playNext(song);
+            ref.read(playerProvider).playNext([song]);
             showToast(context, l10n.willPlayNext);
           },
           child: Text(l10n.playNext),
         ),
         PopupMenuItem(
           value: () {
-            ref.read(playerProvider).addToQueue(song);
+            ref.read(playerProvider).addToQueue([song]);
             showToast(context, l10n.addedToQueue);
           },
           child: Text(l10n.addToQueue),
@@ -187,25 +197,44 @@ class SongMenuButton extends ConsumerWidget {
             isFavorite ? l10n.removeFromFavorites : l10n.addToFavorites,
           ),
         ),
+        PopupMenuItem(
+          value: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => EditSongPage(song: song))),
+          child: Text(l10n.editInfo),
+        ),
+        PopupMenuItem(
+          value: () => deleteSongs(context, ref, [song]),
+          child: Text(l10n.delete),
+        ),
         ...?extraItems?.call(),
       ],
     );
   }
 }
 
-/// 歌曲清單頁（專輯、歌手、資料夾、搜尋結果共用），最上面有「全部播放」。
+/// 歌曲清單頁（歌手、資料夾共用），最上面有「全部播放」。
+/// [songs] 每次音樂庫變動都會重新取，編輯或刪除歌曲後畫面跟著更新。
 class SongListPage extends ConsumerWidget {
-  const SongListPage({super.key, required this.title, required this.songs});
+  const SongListPage({
+    super.key,
+    required this.title,
+    required this.songs,
+    this.actions = const [],
+  });
 
   final String title;
-  final List<Song> songs;
+  final List<Song> Function(WidgetRef ref) songs;
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final songs = this.songs(ref);
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
         actions: [
+          ...actions,
           IconButton(
             tooltip: context.l10n.addAllToPlaylist,
             icon: const Icon(Icons.playlist_add),
@@ -252,30 +281,184 @@ class PlayAllHeader extends ConsumerWidget {
   }
 }
 
-class SongList extends ConsumerWidget {
-  const SongList({super.key, required this.songs, this.onRefresh});
+/// 歌曲清單。長按進入多選，多選時再長按另一首會選取中間的全部。
+/// [leading] 放在「全部播放」上面，例如搜尋結果的歌手、專輯。
+class SongList extends ConsumerStatefulWidget {
+  const SongList({
+    super.key,
+    required this.songs,
+    this.onRefresh,
+    this.leading = const [],
+  });
 
   final List<Song> songs;
   final Future<void> Function()? onRefresh;
+  final List<Widget> leading;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SongList> createState() => _SongListState();
+}
+
+class _SongListState extends ConsumerState<SongList> {
+  final _selected = <int>{};
+  int _anchor = 0;
+  static bool _hintShown = false;
+
+  bool get _selecting => _selected.isNotEmpty;
+
+  void _toggle(int i) => setState(() {
+    final id = widget.songs[i].id;
+    if (!_selected.remove(id)) _selected.add(id);
+    _anchor = i;
+  });
+
+  void _longPress(int i) {
+    if (!_selecting && !_hintShown) {
+      _hintShown = true;
+      showToast(context, context.l10n.selectionHint);
+    }
+    setState(() {
+      final (from, to) = _selecting && _anchor < widget.songs.length
+          ? (min(_anchor, i), max(_anchor, i))
+          : (i, i);
+      for (var j = from; j <= to; j++) {
+        _selected.add(widget.songs[j].id);
+      }
+      _anchor = i;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final songs = widget.songs;
+    // 歌被刪掉後，選取也跟著拿掉
+    _selected.retainAll({for (final s in songs) s.id});
     final player = ref.read(playerProvider);
+    final leading = widget.leading;
     final list = ListView.builder(
-      itemCount: songs.length + 1,
+      itemCount: leading.length + songs.length + 1,
       itemBuilder: (context, i) {
+        if (i < leading.length) return leading[i];
+        i -= leading.length;
         if (i == 0) return PlayAllHeader(songs: songs);
-        final song = songs[i - 1];
+        final index = i - 1;
+        final song = songs[index];
         return SongTile(
           song: song,
-          onTap: () => player.playSongs(songs, i - 1),
+          selected: _selecting ? _selected.contains(song.id) : null,
+          onTap: _selecting
+              ? () => _toggle(index)
+              : () => player.playSongs(songs, index),
+          onLongPress: () => _longPress(index),
         );
       },
     );
-    final refresh = onRefresh;
-    return refresh == null
-        ? list
-        : RefreshIndicator(onRefresh: refresh, child: list);
+    final refresh = widget.onRefresh;
+    return PopScope(
+      canPop: !_selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(_selected.clear);
+      },
+      child: Column(
+        children: [
+          if (_selecting)
+            _SelectionBar(
+              songs: [
+                for (final s in songs)
+                  if (_selected.contains(s.id)) s,
+              ],
+              onSelectAll: () =>
+                  setState(() => _selected.addAll(songs.map((s) => s.id))),
+              onClear: () => setState(_selected.clear),
+            ),
+          Expanded(
+            child: refresh == null
+                ? list
+                : RefreshIndicator(onRefresh: refresh, child: list),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 多選時顯示在清單上方：加入播放清單、下一首播放、加入佇列、加上標籤、刪除。
+class _SelectionBar extends ConsumerWidget {
+  const _SelectionBar({
+    required this.songs,
+    required this.onSelectAll,
+    required this.onClear,
+  });
+
+  final List<Song> songs;
+  final VoidCallback onSelectAll;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final player = ref.read(playerProvider);
+    void done(String? message) {
+      onClear();
+      if (message != null) showToast(context, message);
+    }
+
+    return Material(
+      color: Theme.of(context).colorScheme.secondaryContainer,
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: l10n.clearSelection,
+            icon: const Icon(Icons.close),
+            onPressed: onClear,
+          ),
+          Expanded(child: Text(l10n.selectedCount(songs.length))),
+          IconButton(
+            tooltip: l10n.selectAll,
+            icon: const Icon(Icons.select_all),
+            onPressed: onSelectAll,
+          ),
+          IconButton(
+            tooltip: l10n.addToPlaylist,
+            icon: const Icon(Icons.playlist_add),
+            onPressed: () async {
+              await addToPlaylistSheet(context, ref, songs);
+              onClear();
+            },
+          ),
+          PopupMenuButton<void Function()>(
+            onSelected: (action) => action(),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: () {
+                  player.playNext(songs);
+                  done(l10n.willPlayNext);
+                },
+                child: Text(l10n.playNext),
+              ),
+              PopupMenuItem(
+                value: () {
+                  player.addToQueue(songs);
+                  done(l10n.addedToQueue);
+                },
+                child: Text(l10n.addToQueue),
+              ),
+              PopupMenuItem(
+                value: () async {
+                  await addTagSheet(context, ref, songs);
+                  onClear();
+                },
+                child: Text(l10n.addTags),
+              ),
+              PopupMenuItem(
+                value: () => deleteSongs(context, ref, songs),
+                child: Text(l10n.deleteSongs),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -325,7 +508,7 @@ class MiniPlayer extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
               child: Row(
                 children: [
-                  Artwork(albumId: song.albumId, songId: song.id, size: 44),
+                  Artwork(song: song, size: 44),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
